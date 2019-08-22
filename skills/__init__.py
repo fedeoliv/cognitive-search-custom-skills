@@ -6,33 +6,37 @@ import azure.functions as func
 # Azure Search settings
 endpoint = ""
 admin_key = ""
+api_version = ""
 
 def main(req: func.HttpRequest):
     logging.info('Python HTTP trigger function processed a request.')
     
     create_skillset('myskillsetsample')
+    create_index('myheadersample')
 
     return func.HttpResponse("OK")
 
 def create_skillset(skillset_name: str):
-    uri = f"{endpoint}/skillsets/{skillset_name}?api-version=2019-05-06"
+    uri = f"{endpoint}/skillsets/{skillset_name}?api-version={api_version}"
+    headers = create_headers()
+    data = create_skillset_data()
 
-    headers = {
+    response = requests.put(uri, headers=headers, data=data)
+
+def create_headers():
+    return {
         'Content-Type': 'application/json', 
         'api-key': admin_key 
     }
 
-    data = create_skillset_data()
-    response = requests.put(uri, headers=headers, data=json.dumps(data))
-
 def create_skillset_data():
     description = "OCR for extracting text from PDF files and custom skills for data anonymization"
     skills = create_skills()
-    
-    return {
+
+    return json.dumps({
         "description": description,
         "skills": skills
-    }
+    })
 
 def create_skills():
     skills = []
@@ -65,3 +69,9 @@ def create_ocr_skill():
             }
         ]
     }
+
+def create_index(index_name: str):
+    uri = f"{endpoint}/indexes/{index_name}?api-version={api_version}"
+    headers = create_headers()
+
+    response = requests.put(uri, headers=headers)
