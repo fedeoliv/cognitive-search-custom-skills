@@ -18,6 +18,7 @@ def main(req: func.HttpRequest):
     create_skillset('myskillsetsample')
     create_index('myindexsample')
     create_data_source('mydatasourcesample')
+    create_indexer('myindexersample', 'mydatasourcesample', 'myindexsample', 'myskillsetsample')
 
     return func.HttpResponse("OK")
 
@@ -27,6 +28,8 @@ def create_skillset(skillset_name: str):
     data = create_skillset_data()
 
     response = requests.put(uri, headers=headers, data=data)
+
+    print(response.content)
 
 def create_headers():
     return {
@@ -78,14 +81,21 @@ def create_ocr_skill():
 def create_index(index_name: str):
     uri = f"{endpoint}/indexes/{index_name}?api-version={api_version}"
     headers = create_headers()
-    data = create_index_data(index_name)
+    data = create_index_data()
 
     response = requests.put(uri, headers=headers, data=data)
 
-def create_index_data(index_name: str):
+    print(response.content)
+
+def create_index_data():
     data = {
-        "name": index_name,
         "fields": [
+            { 
+                "name": "id", 
+                "type": "Edm.String", 
+                "key": "true", 
+                "searchable": "false" 
+            },
             {
                 "name": "content",
                 "type": "Edm.String",
@@ -96,8 +106,6 @@ def create_index_data(index_name: str):
                 "searchable": "true",
                 "sortable": "false",
                 "analyzer": "pt-br.lucene",
-                "indexAnalyzer": "null",
-                "searchAnalyzer": "null",
                 "synonymMaps": [],
                 "fields": []
             },
@@ -110,9 +118,6 @@ def create_index_data(index_name: str):
                 "retrievable": "false",
                 "searchable": "false",
                 "sortable": "false",
-                "analyzer": "null",
-                "indexAnalyzer": "null",
-                "searchAnalyzer": "null",
                 "synonymMaps": [],
                 "fields": []
             },
@@ -123,9 +128,6 @@ def create_index_data(index_name: str):
                 "filterable": "false",
                 "retrievable": "false",
                 "sortable": "false",
-                "analyzer": "null",
-                "indexAnalyzer": "null",
-                "searchAnalyzer": "null",
                 "synonymMaps": [],
                 "fields": []
             },
@@ -136,9 +138,6 @@ def create_index_data(index_name: str):
                 "filterable": "false",
                 "retrievable": "false",
                 "sortable": "false",
-                "analyzer": "null",
-                "indexAnalyzer": "null",
-                "searchAnalyzer": "null",
                 "synonymMaps": [],
                 "fields": []
             },
@@ -151,26 +150,20 @@ def create_index_data(index_name: str):
                 "retrievable": "false",
                 "searchable": "false",
                 "sortable": "false",
-                "analyzer": "null",
-                "indexAnalyzer": "null",
-                "searchAnalyzer": "null",
                 "synonymMaps": [],
                 "fields": []
             },
             {
-                "name": "metadata_storage_path",
-                "type": "Edm.String",
-                "facetable": "false",
-                "filterable": "false",
-                "key": "true",
-                "retrievable": "true",
-                "searchable": "false",
-                "sortable": "false",
-                "analyzer": "null",
-                "indexAnalyzer": "null",
-                "searchAnalyzer": "null",
-                "synonymMaps": [],
-                "fields": []
+                "name":"metadata_storage_path",
+                "type":"Edm.String",
+                "facetable":"false",
+                "filterable":"false",
+                "key":"false",
+                "retrievable":"true",
+                "searchable":"false",
+                "sortable":"false",
+                "synonymMaps":[],
+                "fields":[]
             },
             {
                 "name": "metadata_content_type",
@@ -181,9 +174,6 @@ def create_index_data(index_name: str):
                 "retrievable": "false",
                 "searchable": "false",
                 "sortable": "false",
-                "analyzer": "null",
-                "indexAnalyzer": "null",
-                "searchAnalyzer": "null",
                 "synonymMaps": [],
                 "fields": []
             },
@@ -196,9 +186,6 @@ def create_index_data(index_name: str):
                 "retrievable": "false",
                 "searchable": "false",
                 "sortable": "false",
-                "analyzer": "null",
-                "indexAnalyzer": "null",
-                "searchAnalyzer": "null",
                 "synonymMaps": [],
                 "fields": []
             },
@@ -211,9 +198,6 @@ def create_index_data(index_name: str):
                 "retrievable": "true",
                 "searchable": "true",
                 "sortable": "false",
-                "analyzer": "pt-br.lucene",
-                "indexAnalyzer": "null",
-                "searchAnalyzer": "null",
                 "synonymMaps": [],
                 "fields": []
             },
@@ -225,8 +209,6 @@ def create_index_data(index_name: str):
                 "retrievable": "true",
                 "searchable": "true",
                 "analyzer": "pt-br.lucene",
-                "indexAnalyzer": "null",
-                "searchAnalyzer": "null",
                 "synonymMaps": [],
                 "fields": []
             },
@@ -238,8 +220,6 @@ def create_index_data(index_name: str):
                 "retrievable": "true",
                 "searchable": "true",
                 "analyzer": "pt-br.lucene",
-                "indexAnalyzer": "null",
-                "searchAnalyzer": "null",
                 "synonymMaps": [],
                 "fields": []
             }
@@ -247,7 +227,9 @@ def create_index_data(index_name: str):
         "suggesters": [],
         "scoringProfiles": [],
         "defaultScoringProfile": "",
-        "corsOptions": "null",
+        "corsOptions": {  
+            "allowedOrigins": ["*"]
+        },
         "analyzers": [],
         "charFilters": [],
         "tokenFilters": [],
@@ -260,8 +242,10 @@ def create_data_source(data_source_name: str ):
     uri = f"{endpoint}/datasources/{data_source_name}?api-version={api_version}"
     headers = create_headers()
     data = create_datasource_data(data_source_name)
-
+    
     response = requests.put(uri, headers=headers, data=data)
+
+    print(response.content)
 
 def create_datasource_data(data_source_name: str):
     return json.dumps({   
@@ -270,4 +254,22 @@ def create_datasource_data(data_source_name: str):
         "type" : "azureblob",
         "credentials" : { "connectionString" : connection_string },  
         "container" : { "name" : container }
+    })
+
+def create_indexer(indexer_name: str, datasource_name: str, index_name: str, skillset_name: str):
+    uri = f"{endpoint}/indexers/{indexer_name}?api-version={api_version}"
+    headers = create_headers()
+    data = create_indexer_data(indexer_name, datasource_name, index_name, skillset_name)
+    
+    response = requests.put(uri, headers=headers, data=data)
+
+    print(response.content)
+
+def create_indexer_data(indexer_name: str, datasource_name: str, index_name: str, skillset_name: str):
+    return json.dumps({   
+        "name" : indexer_name,  
+        "description" : "Indexer sample",  
+        "dataSourceName" : datasource_name,  
+        "targetIndexName" : index_name,  
+        "skillsetName" : skillset_name
     })
