@@ -4,6 +4,7 @@ import azure.functions as func
 
 from skills.models.cognitive_skill import CognitiveSkill
 from skills.models.cognitive_search import CognitiveSearch
+import skills.utils.analyzer as analyzer
 
 # Azure Search settings
 endpoint = ""
@@ -15,7 +16,7 @@ connection_string = ""
 container = ""
 
 def main(req: func.HttpRequest):
-    logging.info('Python HTTP trigger function processed a request.')
+    logging.info('Cognitive Search HTTP trigger function processed a request.')
     
     skillset = create_skillset('myskillsetsample')
     index = create_index('myindexsample')
@@ -54,7 +55,7 @@ def create_skills():
 def create_index(index_name: str):
     uri = f"{endpoint}/indexes/{index_name}?api-version={api_version}"
     headers = create_headers()
-    data = CognitiveSearch.index_schema('pt-br.lucene')
+    data = CognitiveSearch.index_schema(analyzer.MICROSOFT_PT_BR)
 
     return requests.put(uri, headers=headers, data=data)
 
