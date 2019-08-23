@@ -1,14 +1,14 @@
 import logging
 import requests
 import azure.functions as func
+import skills.utils.analyzer as analyzer
 
 from skills.models.cognitive_skill import CognitiveSkill
 from skills.models.cognitive_search import CognitiveSearch
-import skills.utils.analyzer as analyzer
+from skills.utils.http_requests import HttpRequest
 
 # Azure Search settings
 endpoint = ""
-admin_key = ""
 api_version = ""
 
 # Blob storage settings
@@ -27,16 +27,9 @@ def main(req: func.HttpRequest):
 
 def create_skillset(skillset_name: str):
     uri = f"{endpoint}/skillsets/{skillset_name}?api-version={api_version}"
-    headers = create_headers()
     data = create_skillset_data()
 
-    return requests.put(uri, headers=headers, data=data)
-
-def create_headers():
-    return {
-        'Content-Type': 'application/json', 
-        'api-key': admin_key 
-    }
+    return HttpRequest.put(uri, data)
 
 def create_skillset_data():
     description = "OCR for extracting text from PDF files and custom skills for data anonymization"
@@ -54,21 +47,18 @@ def create_skills():
 
 def create_index(index_name: str):
     uri = f"{endpoint}/indexes/{index_name}?api-version={api_version}"
-    headers = create_headers()
     data = CognitiveSearch.index_schema(analyzer.MICROSOFT_PT_BR)
 
-    return requests.put(uri, headers=headers, data=data)
+    return HttpRequest.put(uri, data)
 
 def create_data_source(datasource_name: str ):
     uri = f"{endpoint}/datasources/{datasource_name}?api-version={api_version}"
-    headers = create_headers()
     data = CognitiveSearch.datasource_schema(datasource_name, connection_string, container)
     
-    return requests.put(uri, headers=headers, data=data)
+    return HttpRequest.put(uri, data)
 
 def create_indexer(indexer_name: str, datasource_name: str, index_name: str, skillset_name: str):
     uri = f"{endpoint}/indexers/{indexer_name}?api-version={api_version}"
-    headers = create_headers()
     data = CognitiveSearch.indexer_schema(indexer_name, datasource_name, index_name, skillset_name)
     
-    return requests.put(uri, headers=headers, data=data)
+    return HttpRequest.put(uri, data)
