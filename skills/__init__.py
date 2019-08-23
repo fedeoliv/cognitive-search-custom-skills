@@ -1,7 +1,9 @@
 import logging
 import requests
-import json
 import azure.functions as func
+
+from skills.models.cognitive_skill import CognitiveSkill
+from skills.models.cognitive_search import CognitiveSearch
 
 # Azure Search settings
 endpoint = ""
@@ -15,10 +17,10 @@ container = ""
 def main(req: func.HttpRequest):
     logging.info('Python HTTP trigger function processed a request.')
     
-    create_skillset('myskillsetsample')
-    create_index('myindexsample')
-    create_data_source('mydatasourcesample')
-    create_indexer('myindexersample', 'mydatasourcesample', 'myindexsample', 'myskillsetsample')
+    skillset = create_skillset('myskillsetsample')
+    index = create_index('myindexsample')
+    data_source = create_data_source('mydatasourcesample')
+    indexer = create_indexer('myindexersample', 'mydatasourcesample', 'myindexsample', 'myskillsetsample')
 
     return func.HttpResponse("OK")
 
@@ -27,9 +29,7 @@ def create_skillset(skillset_name: str):
     headers = create_headers()
     data = create_skillset_data()
 
-    response = requests.put(uri, headers=headers, data=data)
-
-    print(response.content)
+    return requests.put(uri, headers=headers, data=data)
 
 def create_headers():
     return {
@@ -41,237 +41,33 @@ def create_skillset_data():
     description = "OCR for extracting text from PDF files and custom skills for data anonymization"
     skills = create_skills()
 
-    return json.dumps({
-        "description": description,
-        "skills": skills
-    })
+    return CognitiveSearch.skillset_schema(description, skills)
 
 def create_skills():
     skills = []
+    ocr_skill = CognitiveSkill.create_schema(language='pt', detect_orientation=True)
 
-    skills.append(create_ocr_skill())
+    skills.append(ocr_skill)
 
     return skills
-
-def create_ocr_skill():
-    return {
-        "description": "Extracts text (plain and structured) from PDF.",
-        "@odata.type": "#Microsoft.Skills.Vision.OcrSkill",
-        "context": "/document/normalized_images/*",
-        "defaultLanguageCode": "pt",
-        "detectOrientation": "true",
-        "inputs": [
-            {
-                "name": "image",
-                "source": "/document/normalized_images/*"
-            }
-        ],
-        "outputs": [
-            {
-                "name": "text",
-                "targetName": "myText"
-            },
-            {
-                "name": "layoutText",
-                "targetName": "myLayoutText"
-            }
-        ]
-    }
 
 def create_index(index_name: str):
     uri = f"{endpoint}/indexes/{index_name}?api-version={api_version}"
     headers = create_headers()
-    data = create_index_data()
+    data = CognitiveSearch.index_schema('pt-br.lucene')
 
-    response = requests.put(uri, headers=headers, data=data)
+    return requests.put(uri, headers=headers, data=data)
 
-    print(response.content)
-
-def create_index_data():
-    data = {
-        "fields": [
-            {
-                "name": "content",
-                "type": "Edm.String",
-                "facetable": "false",
-                "filterable": "false",
-                "key": "false",
-                "retrievable": "true",
-                "searchable": "true",
-                "sortable": "false",
-                "analyzer": "pt-br.lucene",
-                "synonymMaps": [],
-                "fields": []
-            },
-            {
-                "name": "metadata_storage_content_type",
-                "type": "Edm.String",
-                "facetable": "false",
-                "filterable": "false",
-                "key": "false",
-                "retrievable": "false",
-                "searchable": "false",
-                "sortable": "false",
-                "synonymMaps": [],
-                "fields": []
-            },
-            {
-                "name": "metadata_storage_size",
-                "type": "Edm.Int64",
-                "facetable": "false",
-                "filterable": "false",
-                "retrievable": "false",
-                "sortable": "false",
-                "synonymMaps": [],
-                "fields": []
-            },
-            {
-                "name": "metadata_storage_last_modified",
-                "type": "Edm.DateTimeOffset",
-                "facetable": "false",
-                "filterable": "false",
-                "retrievable": "false",
-                "sortable": "false",
-                "synonymMaps": [],
-                "fields": []
-            },
-            {
-                "name": "metadata_storage_name",
-                "type": "Edm.String",
-                "facetable": "false",
-                "filterable": "false",
-                "key": "false",
-                "retrievable": "false",
-                "searchable": "false",
-                "sortable": "false",
-                "synonymMaps": [],
-                "fields": []
-            },
-            {
-                "name": "metadata_storage_path",
-                "type": "Edm.String",
-                "facetable": "false",
-                "filterable": "false",
-                "key": True,
-                "retrievable": "true",
-                "searchable": "false",
-                "sortable": "false",
-                "synonymMaps": [],
-                "fields": []
-            },
-            {
-                "name": "metadata_content_type",
-                "type": "Edm.String",
-                "facetable": "false",
-                "filterable": "false",
-                "key": "false",
-                "retrievable": "false",
-                "searchable": "false",
-                "sortable": "false",
-                "synonymMaps": [],
-                "fields": []
-            },
-            {
-                "name": "metadata_language",
-                "type": "Edm.String",
-                "facetable": "false",
-                "filterable": "false",
-                "key": "false",
-                "retrievable": "false",
-                "searchable": "false",
-                "sortable": "false",
-                "synonymMaps": [],
-                "fields": []
-            },
-            {
-                "name": "merged_content",
-                "type": "Edm.String",
-                "facetable": "false",
-                "filterable": "false",
-                "key": "false",
-                "retrievable": "true",
-                "searchable": "true",
-                "sortable": "false",
-                "synonymMaps": [],
-                "fields": []
-            },
-            {
-                "name": "text",
-                "type": "Collection(Edm.String)",
-                "facetable": "false",
-                "filterable": "false",
-                "retrievable": "true",
-                "searchable": "true",
-                "analyzer": "pt-br.lucene",
-                "synonymMaps": [],
-                "fields": []
-            },
-            {
-                "name": "layoutText",
-                "type": "Collection(Edm.String)",
-                "facetable": "false",
-                "filterable": "false",
-                "retrievable": "true",
-                "searchable": "true",
-                "analyzer": "pt-br.lucene",
-                "synonymMaps": [],
-                "fields": []
-            }
-        ],
-        "suggesters": [],
-        "scoringProfiles": [],
-        "defaultScoringProfile": "",
-        "corsOptions": {  
-            "allowedOrigins": ["*"]
-        },
-        "analyzers": [],
-        "charFilters": [],
-        "tokenFilters": [],
-        "tokenizers": []
-    }
-
-    return json.dumps(data)
-
-def create_data_source(data_source_name: str ):
-    uri = f"{endpoint}/datasources/{data_source_name}?api-version={api_version}"
+def create_data_source(datasource_name: str ):
+    uri = f"{endpoint}/datasources/{datasource_name}?api-version={api_version}"
     headers = create_headers()
-    data = create_datasource_data(data_source_name)
+    data = CognitiveSearch.datasource_schema(datasource_name, connection_string, container)
     
-    response = requests.put(uri, headers=headers, data=data)
-
-    print(response.content)
-
-def create_datasource_data(data_source_name: str):
-    return json.dumps({   
-        "name" : data_source_name,  
-        "description" : "Blob storage data source",  
-        "type" : "azureblob",
-        "credentials" : { "connectionString" : connection_string },  
-        "container" : { "name" : container }
-    })
+    return requests.put(uri, headers=headers, data=data)
 
 def create_indexer(indexer_name: str, datasource_name: str, index_name: str, skillset_name: str):
     uri = f"{endpoint}/indexers/{indexer_name}?api-version={api_version}"
     headers = create_headers()
-    data = create_indexer_data(indexer_name, datasource_name, index_name, skillset_name)
+    data = CognitiveSearch.indexer_schema(indexer_name, datasource_name, index_name, skillset_name)
     
-    response = requests.put(uri, headers=headers, data=data)
-
-    print(response.content)
-
-def create_indexer_data(indexer_name: str, datasource_name: str, index_name: str, skillset_name: str):
-    return json.dumps({   
-        "name" : indexer_name,  
-        "description" : "Indexer sample",  
-        "dataSourceName" : datasource_name,  
-        "targetIndexName" : index_name,  
-        "skillsetName" : skillset_name,
-        "fieldMappings" : [
-            { 
-                "sourceFieldName" : "metadata_storage_path", 
-                "mappingFunction" : {
-                    "name" : "base64Encode"
-                }
-            }
-        ]
-    })
+    return requests.put(uri, headers=headers, data=data)
