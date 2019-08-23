@@ -145,7 +145,7 @@ class CognitiveSearch:
             "tokenizers": []
         }
 
-        return json.dumps(index_schema)
+        return json.dumps(schema)
 
     @staticmethod
     def skillset_schema(description: str, skills: list):
