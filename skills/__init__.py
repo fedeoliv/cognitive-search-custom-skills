@@ -1,4 +1,5 @@
 import logging
+import os
 import requests
 import azure.functions as func
 import skills.utils.analyzer as analyzer
@@ -8,12 +9,12 @@ from skills.models.cognitive_search import CognitiveSearch
 from skills.utils.http_requests import HttpRequest
 
 # Azure Search settings
-endpoint = ""
-api_version = ""
+endpoint = os.environ['AzureSearchEndpoint']
+api_version = os.environ['AzureSearchApiVersion']
 
 # Blob storage settings
-connection_string = ""
-container = ""
+connection_string = os.environ['AzureBlobConnectionString']
+container = os.environ['AzureBlobContainer']
 
 def main(req: func.HttpRequest):
     logging.info('Cognitive Search HTTP trigger function processed a request.')

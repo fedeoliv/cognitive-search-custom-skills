@@ -1,6 +1,7 @@
+import os
 import requests
 
-admin_key = ""
+admin_key = os.environ['AzureSearchAdminKey']
 
 class HttpRequest:
     
@@ -10,6 +11,6 @@ class HttpRequest:
             'Content-Type': 'application/json', 
             'api-key': admin_key 
         }
-
+        
         return requests.put(uri, headers=headers, data=data)
 
