@@ -90,12 +90,6 @@ def create_index(index_name: str):
 def create_index_data():
     data = {
         "fields": [
-            { 
-                "name": "id", 
-                "type": "Edm.String", 
-                "key": "true", 
-                "searchable": "false" 
-            },
             {
                 "name": "content",
                 "type": "Edm.String",
@@ -154,16 +148,16 @@ def create_index_data():
                 "fields": []
             },
             {
-                "name":"metadata_storage_path",
-                "type":"Edm.String",
-                "facetable":"false",
-                "filterable":"false",
-                "key":"false",
-                "retrievable":"true",
-                "searchable":"false",
-                "sortable":"false",
-                "synonymMaps":[],
-                "fields":[]
+                "name": "metadata_storage_path",
+                "type": "Edm.String",
+                "facetable": "false",
+                "filterable": "false",
+                "key": True,
+                "retrievable": "true",
+                "searchable": "false",
+                "sortable": "false",
+                "synonymMaps": [],
+                "fields": []
             },
             {
                 "name": "metadata_content_type",
@@ -271,5 +265,13 @@ def create_indexer_data(indexer_name: str, datasource_name: str, index_name: str
         "description" : "Indexer sample",  
         "dataSourceName" : datasource_name,  
         "targetIndexName" : index_name,  
-        "skillsetName" : skillset_name
+        "skillsetName" : skillset_name,
+        "fieldMappings" : [
+            { 
+                "sourceFieldName" : "metadata_storage_path", 
+                "mappingFunction" : {
+                    "name" : "base64Encode"
+                }
+            }
+        ]
     })
